@@ -1,5 +1,5 @@
 {
-  "name": "com.appharbr.sdk",
+  "name": "@appharbr/com.appharbr.sdk",
   "version": "2.0.0",
   "displayName": "AppHarbr SDK",
   "description": "Ad quality solution for Unity publishers - blocks inappropriate ads and provides enhanced user experience",
@@ -17,5 +17,8 @@
     "email": "ido.ozdova@appharbr.com",
     "url": "https://appharbr.com"
   },
-  "dependencies": {}
+  "dependencies": {},
+  "publishConfig": {
+     "registry": "https://npm.pkg.github.com"
+   }
 }
