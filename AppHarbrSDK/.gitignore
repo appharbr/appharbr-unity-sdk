@@ -1,0 +1,42 @@
+.DS_Store
+
+# Generated files
+bin/
+gen/
+javadoc/
+
+# Gradle files
+.gradle/
+build/
+
+# Local configuration file (sdk path, etc)
+local.properties
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+*.iws
+out/
+
+# ADT / Eclipse
+.settings/
+.metadata/
+tmp/
+
+*.keystore
+
+mapping.txt
+seeds.txt
+unused.txt
+
+*.meta
+*.cs.bak
+*.vs/
+*.xml.bak
+
+*.log
+Logs/
+Packages/
+Temp/
+Library/
+/*/outputs/

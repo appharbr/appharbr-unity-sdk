@@ -1,0 +1,21 @@
+{
+  "name": "com.appharbr.sdk",
+  "version": "2.0.0",
+  "displayName": "AppHarbr SDK",
+  "description": "Ad quality solution for Unity publishers - blocks inappropriate ads and provides enhanced user experience",
+  "unity": "2022.3",
+  "keywords": [
+    "ads",
+    "mediation",
+    "quality",
+    "appharbr",
+    "ad-blocking",
+    "monetization"
+  ],
+  "author": {
+    "name": "AppHarbr",
+    "email": "ido.ozdova@appharbr.com",
+    "url": "https://appharbr.com"
+  },
+  "dependencies": {}
+}

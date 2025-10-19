@@ -1,0 +1,14 @@
+{
+    "name": "AppHarbr.SDK.Runtime",
+    "rootNamespace": "AppHarbr",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

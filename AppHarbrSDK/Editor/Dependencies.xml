@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<dependencies>
+    <androidPackages>
+        <androidPackage spec="com.github.appharbr:appharbr-android-sdk:2.30.+">
+            <repositories>
+                <repository>https://jitpack.io</repository>
+            </repositories>
+        </androidPackage>
+        <androidPackage spec="com.github.appharbr:android-unity-bridge:1.17.0">
+            <repositories>
+                <repository>https://jitpack.io</repository>
+            </repositories>
+        </androidPackage>
+    </androidPackages>
+    <iosPods>
+        <iosPod name="AppHarbrSDK" version="~>1.27" />
+        <iosPod name="AppHarbrSDKUnityPlugin" version="1.16.0.0" />
+    </iosPods>
+</dependencies>
