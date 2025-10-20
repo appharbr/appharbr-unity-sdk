@@ -29,7 +29,6 @@ mapping.txt
 seeds.txt
 unused.txt
 
-*.meta
 *.cs.bak
 *.vs/
 *.xml.bak
