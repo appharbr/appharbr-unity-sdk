@@ -1,6 +1,6 @@
 {
   "name": "com.appharbr.sdk",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "displayName": "AppHarbr SDK",
   "description": "Ad quality solution for Unity publishers - blocks inappropriate ads and provides enhanced user experience",
   "unity": "2022.3",
