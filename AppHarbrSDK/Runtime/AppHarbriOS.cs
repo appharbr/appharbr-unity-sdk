@@ -6,8 +6,10 @@ using System.Runtime.InteropServices;
 using System;
 using AppHarbrSDK.ThirdParty.MiniJson;
 
-public class AppHarbriOS
+namespace AppHarbrSDK
 {
+    public class AppHarbriOS
+    {
 
 #if UNITY_IOS
 
@@ -298,36 +300,35 @@ public class AppHarbriOS
     }
 #endif
 
-}
+    }
 
-public static class AHTimeLimitConfigExtensions
-{
-    public static Dictionary<string, object> ToDictionary(this AHTimeLimitConfig config)
+    public static class AHTimeLimitConfigExtensions
     {
-        // Create the outer dictionary
-        var dict = new Dictionary<string, object>
+        public static Dictionary<string, object> ToDictionary(this AHTimeLimitConfig config)
+        {
+            // Create the outer dictionary
+            var dict = new Dictionary<string, object>
         {
             { "AdFormat", (int)config.AdFormat } // Convert AHAdFormat enum to its int value
         };
 
-        // Create the inner dictionary for "TimeLimitInSeconds"
-        var timeLimitInSecondsDict = new Dictionary<string, int[]>();
-        foreach (var entry in config.TimeLimitInSeconds)
-        {
-            // Convert the timeout key to string and AHAdSdk[] to int[]
-            var sdkIntArray = new int[entry.Value.Length];
-            for (int i = 0; i < entry.Value.Length; i++)
+            // Create the inner dictionary for "TimeLimitInSeconds"
+            var timeLimitInSecondsDict = new Dictionary<string, int[]>();
+            foreach (var entry in config.TimeLimitInSeconds)
             {
-                sdkIntArray[i] = (int)entry.Value[i]; // Convert each AHAdSdk to its int value
+                // Convert the timeout key to string and AHAdSdk[] to int[]
+                var sdkIntArray = new int[entry.Value.Length];
+                for (int i = 0; i < entry.Value.Length; i++)
+                {
+                    sdkIntArray[i] = (int)entry.Value[i]; // Convert each AHAdSdk to its int value
+                }
+
+                timeLimitInSecondsDict[entry.Key.ToString()] = sdkIntArray;
             }
 
-            timeLimitInSecondsDict[entry.Key.ToString()] = sdkIntArray;
+            dict["TimeLimitInSeconds"] = timeLimitInSecondsDict;
+
+            return dict;
         }
-
-        dict["TimeLimitInSeconds"] = timeLimitInSecondsDict;
-
-        return dict;
     }
 }
-
-
