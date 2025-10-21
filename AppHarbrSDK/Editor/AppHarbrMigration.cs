@@ -17,13 +17,24 @@ namespace AppHarbrSDK.Editor
 
         private static void CheckAndMigrate()
         {
+            // Detect where THIS script is running from
+            bool runningFromPackages = Directory.Exists("Packages/com.appharbr.sdk");
+            bool runningFromAssets = Directory.Exists("Assets/AppHarbrSDK") && !runningFromPackages;
+            
+            // If running from Assets (manual import), don't try to delete ourselves!
+            if (runningFromAssets)
+            {
+                EditorPrefs.SetBool(MIGRATION_FLAG_KEY, true);
+                return;
+            }
+            
             // Only run once per project
             if (EditorPrefs.GetBool(MIGRATION_FLAG_KEY, false))
             {
                 return;
             }
-
-            // Check if legacy SDK folder exists
+            
+            // NOW check if legacy SDK exists (we're running from Packages)
             if (Directory.Exists(LEGACY_SDK_PATH))
             {
                 bool shouldMigrate = EditorUtility.DisplayDialog(
@@ -34,7 +45,7 @@ namespace AppHarbrSDK.Editor
                     "Yes, Remove Old Version",
                     "No, Keep It"
                 );
-
+                
                 if (shouldMigrate)
                 {
                     RemoveLegacySDK();
@@ -43,17 +54,14 @@ namespace AppHarbrSDK.Editor
                 {
                     Debug.LogWarning("[AppHarbr] Legacy SDK folder kept. Please remove Assets/AppHarbrSDK manually to avoid conflicts.");
                 }
-
-                // Mark migration as completed
+                
                 EditorPrefs.SetBool(MIGRATION_FLAG_KEY, true);
             }
             else
             {
-                // No legacy SDK found, mark as completed
                 EditorPrefs.SetBool(MIGRATION_FLAG_KEY, true);
             }
         }
-
         private static void RemoveLegacySDK()
         {
             try
