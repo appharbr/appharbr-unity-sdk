@@ -1,8 +1,8 @@
 {
-    "name": "AppHarbr.SDK.Editor",
+    "name": "AppHarbrSDK.Editor",
     "rootNamespace": "",
     "references": [
-        "AppHarbr.SDK.Runtime"
+        "AppHarbrSDK.Runtime"
     ],
     "includePlatforms": [
         "Editor"
