@@ -2,7 +2,7 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 
-namespace AppHarbr.Editor
+namespace AppHarbrSDK.Editor 
 {
     [InitializeOnLoad]
     public class AppHarbrMigration
