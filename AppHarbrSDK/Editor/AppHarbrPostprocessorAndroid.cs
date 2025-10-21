@@ -7,10 +7,10 @@ public class AppHarbrPostprocessor
 {
     private static readonly string OldAarPath = "Assets/AppHarbrSDK/Plugins/Android/AH-SDK-Android.aar";
     private static readonly string OldBridgeAarPath = "Assets/AppHarbrSDK/Plugins/Android/appharbr-unity-mediations-plugin.aar";
-    private static readonly string SourceFilePathInterstitial = "Assets/AppHarbrSDK/Plugins/Android/InterstitialAd.zip";
+    private static readonly string SourceFilePathInterstitial = "Packages/com.appharbr.sdk/Plugins/Android/InterstitialAd.zip";
     private static readonly string FileToCheckPathInterstitial = "Assets/LevelPlay/Runtime/Plugins/Android/InterstitialAd.java";
-      private static readonly string SourceFilePathRewarded = "Assets/AppHarbrSDK/Plugins/Android/RewardedAd.zip";
-      private static readonly string FileToCheckPathRewarded = "Assets/LevelPlay/Runtime/Plugins/Android/RewardedAd.java";
+    private static readonly string SourceFilePathRewarded = "Packages/com.appharbr.sdk/Plugins/Android/RewardedAd.zip";
+    private static readonly string FileToCheckPathRewarded = "Assets/LevelPlay/Runtime/Plugins/Android/RewardedAd.java";
 
     static AppHarbrPostprocessor()
     {
