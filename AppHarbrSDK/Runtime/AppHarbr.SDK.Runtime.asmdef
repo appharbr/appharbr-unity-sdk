@@ -1,6 +1,6 @@
 {
     "name": "AppHarbr.SDK.Runtime",
-    "rootNamespace": "AppHarbr",
+    "rootNamespace": "",
     "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],

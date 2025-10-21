@@ -1,6 +1,6 @@
 {
     "name": "AppHarbr.SDK.Editor",
-    "rootNamespace": "AppHarbr.Editor",
+    "rootNamespace": "",
     "references": [
         "AppHarbr.SDK.Runtime"
     ],
