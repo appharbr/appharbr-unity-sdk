@@ -32,11 +32,6 @@ namespace AppHarbrSDK.Editor
             // Scenario 1: Both UPM and manual - only check once
             if (upmExists && manualExists)
             {
-                if (EditorPrefs.GetBool(MIGRATION_FLAG_KEY, false))
-                {
-                    return;
-                }
-
                 bool shouldMigrate = EditorUtility.DisplayDialog(
                     "AppHarbr SDK Migration",
                     "Both UPM and manual versions of AppHarbr SDK were detected.\n\n" +
