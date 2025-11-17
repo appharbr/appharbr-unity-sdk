@@ -21,10 +21,9 @@ public class AppHarbrPostprocessor
     private static readonly string AssetFilePathRewarded = "Assets/LevelPlay/Runtime/Plugins/Android/RewardedAd.java";
 
     // Local override directory for UPM packages (in Assets, so it persists)
-    private static readonly string LocalOverrideDir = "Assets/AppHarbrSDK/LevelPlayOverrides/Android";
-    private static readonly string LocalOverrideInterstitial = "Assets/AppHarbrSDK/LevelPlayOverrides/Android/InterstitialAd.java";
-    private static readonly string LocalOverrideRewarded = "Assets/AppHarbrSDK/LevelPlayOverrides/Android/RewardedAd.java";
-
+    private static readonly string LocalOverrideDir = "Assets/Plugins/AppHarbr/LevelPlayOverrides/Android";
+    private static readonly string LocalOverrideInterstitial = "Assets/Plugins/AppHarbr/LevelPlayOverrides/Android/InterstitialAd.java";
+    private static readonly string LocalOverrideRewarded = "Assets/Plugins/AppHarbr/LevelPlayOverrides/Android/RewardedAd.java";
     // UPM package constants
     private static readonly string UpmPackageName = "com.unity.services.levelplay";
 
