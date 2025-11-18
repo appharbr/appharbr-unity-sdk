@@ -1,230 +1,217 @@
 using System.IO;
 using UnityEditor;
+using UnityEditor.Build;
+using UnityEditor.Build.Reporting;
 using UnityEngine;
-using System.Linq;
-using System.Collections.Generic;
 
+/// <summary>
+/// AppHarbr SDK - LevelPlay Integration Manager
+/// Automatically manages integration with LevelPlay SDK for both manual and UPM installations
+/// </summary>
 [InitializeOnLoad]
-public class AppHarbrPostprocessor
+public class AppHarbrPostprocessor : IPreprocessBuildWithReport
 {
-    private static readonly string OldAarPath = "Assets/AppHarbrSDK/Plugins/Android/AH-SDK-Android.aar";
-    private static readonly string OldBridgeAarPath = "Assets/AppHarbrSDK/Plugins/Android/appharbr-unity-mediations-plugin.aar";
+    #region Constants
 
-    // Source files - support both UPM and manual import
-    private static readonly string UpmSourcePathInterstitial = "Packages/com.appharbr.sdk/Plugins/Android/InterstitialAd.zip";
-    private static readonly string UpmSourcePathRewarded = "Packages/com.appharbr.sdk/Plugins/Android/RewardedAd.zip";
-    private static readonly string AssetSourcePathInterstitial = "Assets/AppHarbrSDK/Plugins/Android/InterstitialAd.zip";
-    private static readonly string AssetSourcePathRewarded = "Assets/AppHarbrSDK/Plugins/Android/RewardedAd.zip";
+    // Legacy AAR files to remove (old SDK versions)
+    private const string OLD_AAR_PATH = "Assets/AppHarbrSDK/Plugins/Android/AH-SDK-Android.aar";
+    private const string OLD_BRIDGE_AAR_PATH = "Assets/AppHarbrSDK/Plugins/Android/appharbr-unity-mediations-plugin.aar";
 
-    // Asset-based paths for manual LevelPlay import
-    private static readonly string AssetFilePathInterstitial = "Assets/LevelPlay/Runtime/Plugins/Android/InterstitialAd.java";
-    private static readonly string AssetFilePathRewarded = "Assets/LevelPlay/Runtime/Plugins/Android/RewardedAd.java";
+    // AppHarbr source files (support both UPM and manual installation)
+    private const string UPM_SOURCE_INTERSTITIAL = "Packages/com.appharbr.sdk/Plugins/Android/InterstitialAd.zip";
+    private const string UPM_SOURCE_REWARDED = "Packages/com.appharbr.sdk/Plugins/Android/RewardedAd.zip";
+    private const string ASSET_SOURCE_INTERSTITIAL = "Assets/AppHarbrSDK/Plugins/Android/InterstitialAd.zip";
+    private const string ASSET_SOURCE_REWARDED = "Assets/AppHarbrSDK/Plugins/Android/RewardedAd.zip";
 
-    // Local override directory for UPM packages (in Assets, so it persists)
-    private static readonly string LocalOverrideDir = "Assets/Plugins/AppHarbr/LevelPlayOverrides/Android";
-    private static readonly string LocalOverrideInterstitial = "Assets/Plugins/AppHarbr/LevelPlayOverrides/Android/InterstitialAd.java";
-    private static readonly string LocalOverrideRewarded = "Assets/Plugins/AppHarbr/LevelPlayOverrides/Android/RewardedAd.java";
-    // UPM package constants
-    private static readonly string UpmPackageName = "com.unity.services.levelplay";
+    // LevelPlay manual installation paths
+    private const string LEVELPLAY_MANUAL_INTERSTITIAL = "Assets/LevelPlay/Runtime/Plugins/Android/InterstitialAd.java";
+    private const string LEVELPLAY_MANUAL_REWARDED = "Assets/LevelPlay/Runtime/Plugins/Android/RewardedAd.java";
 
-    // EditorPrefs key
-    private static readonly string LastLevelPlayVersionKey = "AppHarbr_LastLevelPlayVersion";
-    private static readonly string LastInstallationTypeKey = "AppHarbr_LastInstallationType";
-    private static readonly string MigrationFlagKey = "AppHarbr.SDK.MigrationCompleted";
+    // LevelPlay UPM override paths (in Assets to persist)
+    private const string LEVELPLAY_UPM_OVERRIDE_DIR = "Assets/Plugins/AppHarbr/LevelPlayOverrides/Android";
+    private const string LEVELPLAY_UPM_OVERRIDE_INTERSTITIAL = "Assets/Plugins/AppHarbr/LevelPlayOverrides/Android/InterstitialAd.java";
+    private const string LEVELPLAY_UPM_OVERRIDE_REWARDED = "Assets/Plugins/AppHarbr/LevelPlayOverrides/Android/RewardedAd.java";
+
+    // LevelPlay UPM package name
+    private const string LEVELPLAY_PACKAGE_NAME = "com.unity.services.levelplay";
+
+    // EditorPrefs key for migration tracking
+    private const string MIGRATION_FLAG_KEY = "AppHarbr.SDK.MigrationCompleted";
+
+    #endregion
+
+    #region Build Preprocessor
+
+    public int callbackOrder => 0;
+
+    /// <summary>
+    /// Pre-build hook: Ensures LevelPlay integration is up-to-date before Android builds
+    /// </summary>
+    public void OnPreprocessBuild(BuildReport report)
+    {
+        if (report.summary.platform != BuildTarget.Android)
+        {
+            return;
+        }
+
+        PerformLevelPlayIntegration(forceRefresh: true);
+    }
+
+    #endregion
+
+    #region Initialization
 
     static AppHarbrPostprocessor()
     {
-        RemoveOldFile(OldAarPath);
-        RemoveOldFile(OldAarPath + ".meta");
-        RemoveOldFile(OldBridgeAarPath);
-        RemoveOldFile(OldBridgeAarPath + ".meta");
+        // Clean up old legacy files
+        CleanupLegacyFiles();
 
-        // Delay integration to ensure packages are loaded AND migration is complete (if running)
-        EditorApplication.delayCall += () =>
-        {
-            // Check if both UPM and manual AppHarbr exist (migration scenario)
-            bool upmAppHarbrExists = File.Exists("Packages/com.appharbr.sdk/package.json");
-            bool manualAppHarbrExists = Directory.Exists("Assets/AppHarbrSDK");
-            bool migrationCompleted = EditorPrefs.GetBool(MigrationFlagKey, false);
-
-            // Run integration if:
-            // 1. Migration already completed, OR
-            // 2. Not a migration scenario (either only UPM, only manual, or neither)
-            bool isMigrationScenario = upmAppHarbrExists && manualAppHarbrExists;
-
-            if (migrationCompleted || !isMigrationScenario)
-            {
-                ReplaceLevelPlayIntegration();
-            }
-            else
-            {
-                // Migration scenario but not completed yet
-                // Schedule another delay to wait for migration dialog
-                EditorApplication.delayCall += ReplaceLevelPlayIntegration;
-            }
-        };
+        // Perform initial integration check on Unity load
+        EditorApplication.delayCall += InitialIntegrationCheck;
     }
 
-    private static void RemoveOldFile(string pathToRemove)
+    private static void InitialIntegrationCheck()
     {
-        if (File.Exists(pathToRemove))
+        // Check if we're in a migration scenario (both UPM and manual AppHarbr exist)
+        bool isUpmAppHarbr = File.Exists("Packages/com.appharbr.sdk/package.json");
+        bool isManualAppHarbr = Directory.Exists("Assets/AppHarbrSDK");
+        bool migrationCompleted = EditorPrefs.GetBool(MIGRATION_FLAG_KEY, false);
+
+        if (isUpmAppHarbr && isManualAppHarbr && !migrationCompleted)
         {
-            try
-            {
-                File.Delete(pathToRemove);
-                AssetDatabase.Refresh();
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogError($"[AppHarbr] Error removing file: {pathToRemove}. {e.Message}");
-            }
+            // Wait for migration dialog to complete
+            EditorApplication.delayCall += () => PerformLevelPlayIntegration(forceRefresh: false);
+        }
+        else
+        {
+            PerformLevelPlayIntegration(forceRefresh: false);
         }
     }
 
-    private static void ReplaceLevelPlayIntegration()
+    private static void CleanupLegacyFiles()
     {
-        // Find AppHarbr source files (could be in UPM package or Assets)
-        string sourceInterstitial = FindAppHarbrSourceFile(UpmSourcePathInterstitial, AssetSourcePathInterstitial);
-        string sourceRewarded = FindAppHarbrSourceFile(UpmSourcePathRewarded, AssetSourcePathRewarded);
+        DeleteFileIfExists(OLD_AAR_PATH);
+        DeleteFileIfExists(OLD_AAR_PATH + ".meta");
+        DeleteFileIfExists(OLD_BRIDGE_AAR_PATH);
+        DeleteFileIfExists(OLD_BRIDGE_AAR_PATH + ".meta");
+    }
+
+    #endregion
+
+    #region Core Integration Logic
+
+    /// <summary>
+    /// Main integration method: detects LevelPlay installation and integrates AppHarbr files
+    /// </summary>
+    private static void PerformLevelPlayIntegration(bool forceRefresh)
+    {
+        // Find AppHarbr source files (try UPM first, then Assets)
+        string sourceInterstitial = FindFile(UPM_SOURCE_INTERSTITIAL, ASSET_SOURCE_INTERSTITIAL);
+        string sourceRewarded = FindFile(UPM_SOURCE_REWARDED, ASSET_SOURCE_REWARDED);
 
         if (string.IsNullOrEmpty(sourceInterstitial) || string.IsNullOrEmpty(sourceRewarded))
         {
-            return; // Source files not found, silently skip
+            // AppHarbr source files not found, nothing to do
+            return;
         }
 
         // Detect LevelPlay installation type
-        LevelPlayInstallationType installType = DetectLevelPlayInstallation();
+        LevelPlayInstallType installType = DetectLevelPlayInstallation();
 
         switch (installType)
         {
-            case LevelPlayInstallationType.ManualAssets:
-                HandleManualInstallation(sourceInterstitial, sourceRewarded);
+            case LevelPlayInstallType.Manual:
+                IntegrateManualLevelPlay(sourceInterstitial, sourceRewarded, forceRefresh);
                 break;
 
-            case LevelPlayInstallationType.UpmPackage:
-                HandleUpmInstallation(sourceInterstitial, sourceRewarded);
+            case LevelPlayInstallType.UPM:
+                IntegrateUpmLevelPlay(sourceInterstitial, sourceRewarded, forceRefresh);
                 break;
 
-            case LevelPlayInstallationType.NotFound:
-                // LevelPlay not installed, silently skip
+            case LevelPlayInstallType.NotInstalled:
+                // LevelPlay not installed, nothing to do
                 break;
         }
     }
 
-    private static void HandleManualInstallation(string sourceInterstitial, string sourceRewarded)
+    /// <summary>
+    /// Integrates with manually installed LevelPlay (in Assets folder)
+    /// </summary>
+    private static void IntegrateManualLevelPlay(string sourceInterstitial, string sourceRewarded, bool forceRefresh)
     {
         bool success = true;
 
-        if (!ReplaceFile(sourceInterstitial, AssetFilePathInterstitial, "InterstitialAd.java"))
+        success &= CopyFile(sourceInterstitial, LEVELPLAY_MANUAL_INTERSTITIAL, forceRefresh);
+        success &= CopyFile(sourceRewarded, LEVELPLAY_MANUAL_REWARDED, forceRefresh);
+
+        if (success && forceRefresh)
         {
-            success = false;
-        }
-
-        if (!ReplaceFile(sourceRewarded, AssetFilePathRewarded, "RewardedAd.java"))
-        {
-            success = false;
-        }
-
-        if (success)
-        {
-            // Save installation type
-            EditorPrefs.SetString(LastInstallationTypeKey, "Manual");
-            Debug.Log("[AppHarbr] LevelPlay integration completed successfully");
-        }
-    }
-
-    private static void HandleUpmInstallation(string sourceInterstitial, string sourceRewarded)
-    {
-        // Get current LevelPlay version
-        string currentVersion = GetLevelPlayVersion();
-        string lastVersion = EditorPrefs.GetString(LastLevelPlayVersionKey, "");
-        string lastInstallType = EditorPrefs.GetString(LastInstallationTypeKey, "");
-
-        bool versionChanged = !string.IsNullOrEmpty(currentVersion) && currentVersion != lastVersion;
-        bool installTypeChanged = lastInstallType == "Manual"; // Migrated from manual to UPM
-        bool overridesExist = File.Exists(LocalOverrideInterstitial) && File.Exists(LocalOverrideRewarded);
-
-        // Auto-refresh if version changed OR installation type changed
-        if ((versionChanged || installTypeChanged) && overridesExist)
-        {
-            if (File.Exists(LocalOverrideInterstitial))
-            {
-                File.Delete(LocalOverrideInterstitial);
-            }
-
-            if (File.Exists(LocalOverrideRewarded))
-            {
-                File.Delete(LocalOverrideRewarded);
-            }
-        }
-
-        // Create local override directory
-        if (!Directory.Exists(LocalOverrideDir))
-        {
-            Directory.CreateDirectory(LocalOverrideDir);
-        }
-
-        // Copy files to local override location
-        bool interstitialCopied = CopyToLocalOverride(sourceInterstitial, LocalOverrideInterstitial, "InterstitialAd.java");
-        bool rewardedCopied = CopyToLocalOverride(sourceRewarded, LocalOverrideRewarded, "RewardedAd.java");
-
-        if (interstitialCopied && rewardedCopied)
-        {
-            // Save current version and installation type
-            if (!string.IsNullOrEmpty(currentVersion))
-            {
-                EditorPrefs.SetString(LastLevelPlayVersionKey, currentVersion);
-            }
-            EditorPrefs.SetString(LastInstallationTypeKey, "UPM");
-
             AssetDatabase.Refresh();
-            Debug.Log("[AppHarbr] LevelPlay integration completed successfully");
         }
     }
 
-    private static bool CopyToLocalOverride(string sourceZipPath, string targetPath, string fileName)
+    /// <summary>
+    /// Integrates with UPM-installed LevelPlay (creates overrides in Assets)
+    /// </summary>
+    private static void IntegrateUpmLevelPlay(string sourceInterstitial, string sourceRewarded, bool forceRefresh)
     {
-        try
+        // Ensure override directory exists
+        if (!Directory.Exists(LEVELPLAY_UPM_OVERRIDE_DIR))
         {
-            // Check if file already exists
-            if (File.Exists(targetPath))
-            {
-                return true;
-            }
-
-            File.Copy(sourceZipPath, targetPath, true);
-            return true;
+            Directory.CreateDirectory(LEVELPLAY_UPM_OVERRIDE_DIR);
         }
-        catch (System.Exception e)
+
+        bool success = true;
+
+        success &= CopyFile(sourceInterstitial, LEVELPLAY_UPM_OVERRIDE_INTERSTITIAL, forceRefresh);
+        success &= CopyFile(sourceRewarded, LEVELPLAY_UPM_OVERRIDE_REWARDED, forceRefresh);
+
+        if (success && forceRefresh)
         {
-            Debug.LogError($"[AppHarbr] Integration failed: {e.Message}");
-            return false;
+            AssetDatabase.Refresh();
         }
     }
 
-    private static LevelPlayInstallationType DetectLevelPlayInstallation()
+    #endregion
+
+    #region Detection Methods
+
+    private enum LevelPlayInstallType
     {
-        // Check for manual installation first (in Assets)
-        if (File.Exists(AssetFilePathInterstitial) || File.Exists(AssetFilePathRewarded))
+        NotInstalled,
+        Manual,
+        UPM
+    }
+
+    /// <summary>
+    /// Detects how LevelPlay is installed (manual in Assets vs UPM package)
+    /// </summary>
+    private static LevelPlayInstallType DetectLevelPlayInstallation()
+    {
+        // Check for manual installation first (files in Assets folder)
+        if (File.Exists(LEVELPLAY_MANUAL_INTERSTITIAL) || File.Exists(LEVELPLAY_MANUAL_REWARDED))
         {
-            return LevelPlayInstallationType.ManualAssets;
+            return LevelPlayInstallType.Manual;
         }
 
         // Check for UPM installation
         if (IsLevelPlayInstalledViaUpm())
         {
-            return LevelPlayInstallationType.UpmPackage;
+            return LevelPlayInstallType.UPM;
         }
 
-        return LevelPlayInstallationType.NotFound;
+        return LevelPlayInstallType.NotInstalled;
     }
 
+    /// <summary>
+    /// Checks if LevelPlay is installed via Unity Package Manager
+    /// </summary>
     private static bool IsLevelPlayInstalledViaUpm()
     {
         try
         {
-            // Try PackageManager API
-            var packageInfo = UnityEditor.PackageManager.PackageInfo.FindForAssetPath($"Packages/{UpmPackageName}");
+            // Try Unity's PackageInfo API first
+            var packageInfo = UnityEditor.PackageManager.PackageInfo.FindForAssetPath($"Packages/{LEVELPLAY_PACKAGE_NAME}");
             if (packageInfo != null)
             {
                 return true;
@@ -234,7 +221,7 @@ public class AppHarbrPostprocessor
             string packageCacheDir = Path.Combine("Library", "PackageCache");
             if (Directory.Exists(packageCacheDir))
             {
-                var levelPlayDirs = Directory.GetDirectories(packageCacheDir, $"{UpmPackageName}@*", SearchOption.TopDirectoryOnly);
+                var levelPlayDirs = Directory.GetDirectories(packageCacheDir, $"{LEVELPLAY_PACKAGE_NAME}@*", SearchOption.TopDirectoryOnly);
                 return levelPlayDirs.Length > 0;
             }
 
@@ -246,35 +233,15 @@ public class AppHarbrPostprocessor
         }
     }
 
-    private static bool ReplaceFile(string sourceZipPath, string targetFilePath, string targetFileName)
-    {
-        try
-        {
-            // Ensure target directory exists
-            string targetDirectory = Path.GetDirectoryName(targetFilePath);
-            if (!Directory.Exists(targetDirectory))
-            {
-                return false;
-            }
-
-            // Copy source file to destination
-            File.Copy(sourceZipPath, targetFilePath, true);
-            AssetDatabase.Refresh();
-            return true;
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogError($"[AppHarbr] Integration failed: {e.Message}");
-            return false;
-        }
-    }
-
+    /// <summary>
+    /// Gets the installed LevelPlay version (for UPM installations)
+    /// </summary>
     private static string GetLevelPlayVersion()
     {
         try
         {
-            // Try PackageManager API first
-            var packageInfo = UnityEditor.PackageManager.PackageInfo.FindForAssetPath($"Packages/{UpmPackageName}");
+            // Try PackageInfo API
+            var packageInfo = UnityEditor.PackageManager.PackageInfo.FindForAssetPath($"Packages/{LEVELPLAY_PACKAGE_NAME}");
             if (packageInfo != null)
             {
                 return packageInfo.version;
@@ -284,15 +251,12 @@ public class AppHarbrPostprocessor
             string packageCacheDir = Path.Combine("Library", "PackageCache");
             if (Directory.Exists(packageCacheDir))
             {
-                var levelPlayDirs = Directory.GetDirectories(packageCacheDir, $"{UpmPackageName}@*", SearchOption.TopDirectoryOnly);
+                var levelPlayDirs = Directory.GetDirectories(packageCacheDir, $"{LEVELPLAY_PACKAGE_NAME}@*", SearchOption.TopDirectoryOnly);
                 if (levelPlayDirs.Length > 0)
                 {
-                    var dirName = Path.GetFileName(levelPlayDirs[0]);
-                    string prefix = $"{UpmPackageName}@";
-                    if (dirName.Length > prefix.Length)
-                    {
-                        return dirName.Substring(prefix.Length);
-                    }
+                    string dirName = Path.GetFileName(levelPlayDirs[0]);
+                    string prefix = $"{LEVELPLAY_PACKAGE_NAME}@";
+                    return dirName.Substring(prefix.Length);
                 }
             }
 
@@ -304,54 +268,103 @@ public class AppHarbrPostprocessor
         }
     }
 
-    private static string FindAppHarbrSourceFile(string upmPath, string assetPath)
+    #endregion
+
+    #region File Utilities
+
+    /// <summary>
+    /// Finds first existing file from multiple possible paths
+    /// </summary>
+    private static string FindFile(params string[] paths)
     {
-        if (File.Exists(upmPath))
+        foreach (string path in paths)
         {
-            return upmPath;
+            if (File.Exists(path))
+            {
+                return path;
+            }
         }
-
-        if (File.Exists(assetPath))
-        {
-            return assetPath;
-        }
-
         return null;
     }
 
-    private enum LevelPlayInstallationType
+    /// <summary>
+    /// Copies file from source to destination with optional force refresh
+    /// </summary>
+    private static bool CopyFile(string sourcePath, string destPath, bool forceRefresh)
     {
-        NotFound,
-        ManualAssets,
-        UpmPackage
+        try
+        {
+            // Ensure destination directory exists
+            string destDir = Path.GetDirectoryName(destPath);
+            if (!Directory.Exists(destDir))
+            {
+                return false; // Target directory doesn't exist (LevelPlay not installed)
+            }
+
+            // Check if copy is needed (unless forcing refresh)
+            if (!forceRefresh && File.Exists(destPath))
+            {
+                // Quick size comparison to avoid unnecessary copy
+                FileInfo sourceInfo = new FileInfo(sourcePath);
+                FileInfo destInfo = new FileInfo(destPath);
+
+                if (sourceInfo.Length == destInfo.Length)
+                {
+                    return true; // Files appear identical
+                }
+            }
+
+            // Perform copy
+            File.Copy(sourcePath, destPath, overwrite: true);
+            return true;
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[AppHarbr] Failed to copy {Path.GetFileName(sourcePath)}: {e.Message}");
+            return false;
+        }
     }
 
-    // Menu item to manually refresh integration
-    [MenuItem("Tools/AppHarbr/Refresh LevelPlay Integration", true)]
-    private static bool ValidateManualRefreshIntegration()
+    /// <summary>
+    /// Safely deletes a file if it exists
+    /// </summary>
+    private static void DeleteFileIfExists(string path)
     {
-        // Only show menu item if LevelPlay is installed
-        return DetectLevelPlayInstallation() != LevelPlayInstallationType.NotFound;
+        if (File.Exists(path))
+        {
+            try
+            {
+                File.Delete(path);
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning($"[AppHarbr] Could not delete {path}: {e.Message}");
+            }
+        }
+    }
+
+    #endregion
+
+    #region Menu Items
+
+    [MenuItem("Tools/AppHarbr/Refresh LevelPlay Integration", true)]
+    private static bool ValidateManualRefresh()
+    {
+        return DetectLevelPlayInstallation() != LevelPlayInstallType.NotInstalled;
     }
 
     [MenuItem("Tools/AppHarbr/Refresh LevelPlay Integration")]
     public static void ManualRefreshIntegration()
     {
-        // Clear stored version and installation type to force refresh
-        EditorPrefs.DeleteKey(LastLevelPlayVersionKey);
-        EditorPrefs.DeleteKey(LastInstallationTypeKey);
+        // Force delete existing override files to ensure clean refresh
+        DeleteFileIfExists(LEVELPLAY_UPM_OVERRIDE_INTERSTITIAL);
+        DeleteFileIfExists(LEVELPLAY_UPM_OVERRIDE_REWARDED);
 
-        // Force delete existing overrides to recreate them
-        if (File.Exists(LocalOverrideInterstitial))
-        {
-            File.Delete(LocalOverrideInterstitial);
-        }
+        // Perform integration with force refresh
+        PerformLevelPlayIntegration(forceRefresh: true);
 
-        if (File.Exists(LocalOverrideRewarded))
-        {
-            File.Delete(LocalOverrideRewarded);
-        }
-
-        ReplaceLevelPlayIntegration();
+        Debug.Log("[AppHarbr] LevelPlay integration refreshed successfully");
     }
+
+    #endregion
 }

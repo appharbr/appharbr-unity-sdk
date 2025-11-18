@@ -42,6 +42,7 @@ public class InterstitialAd {
               );
           }
 
+	  Log.i("AppHarbrUnityPackage", "AppHarbr Integrated Interstitial for " + this.mInterstitialAd.getAdUnitId() + "? " + (ahWrapperCallback != null));
           this.mInterstitialAd.setListener(ahWrapperCallback != null
                   ? ahWrapperCallback
                   : mLevelPlayInterstitialAdListener);

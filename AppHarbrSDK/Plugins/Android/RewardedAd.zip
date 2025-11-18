@@ -46,6 +46,7 @@ public class RewardedAd {
          );
       }
 
+      Log.i("AppHarbrUnityPackage", "AppHarbr Integrated Rewarded for " + this.mRewardedAd.getAdUnitId() + "? " + (ahWrapperCallback != null));
       this.mRewardedAd.setListener(ahWrapperCallback != null
               ? ahWrapperCallback
               : mLevelPlayRewardedAdListener );
