@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <dependencies>
     <androidPackages>
-        <androidPackage spec="com.github.appharbr:appharbr-android-sdk:2.30.+">
+        <androidPackage spec="com.github.appharbr:appharbr-android-sdk:2.31.+">
             <repositories>
                 <repository>https://jitpack.io</repository>
             </repositories>
@@ -13,7 +13,7 @@
         </androidPackage>
     </androidPackages>
     <iosPods>
-        <iosPod name="AppHarbrSDK" version="~>1.27" />
+        <iosPod name="AppHarbrSDK" version="~>1.28" />
         <iosPod name="AppHarbrSDKUnityPlugin" version="1.16.0.0" />
     </iosPods>
 </dependencies>
