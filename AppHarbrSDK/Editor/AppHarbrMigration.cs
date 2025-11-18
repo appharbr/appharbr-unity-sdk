@@ -11,7 +11,6 @@ namespace AppHarbrSDK.Editor
         private const string LEGACY_SCRIPTS_PATH = "Assets/AppHarbrSDK/Scripts";
         private const string UPM_PACKAGE_PATH = "Packages/com.appharbr.sdk/package.json";
         private const string MIGRATION_FLAG_KEY = "AppHarbr.SDK.MigrationCompleted";
-        private const string CLEANUP_FLAG_KEY = "AppHarbr.SDK.CleanupCompleted";
 
         // Old AAR files that should be removed
         private const string OLD_AAR_PATH = "Assets/AppHarbrSDK/Plugins/Android/AH-SDK-Android.aar";
@@ -50,7 +49,11 @@ namespace AppHarbrSDK.Editor
                     Debug.LogWarning("[AppHarbr] Legacy SDK folder kept. Please remove Assets/AppHarbrSDK manually to avoid conflicts with the UPM version.");
                 }
 
+                // Always set migration flag after user makes a choice
                 EditorPrefs.SetBool(MIGRATION_FLAG_KEY, true);
+
+                // Notify postprocessor that migration is complete
+                NotifyMigrationComplete();
             }
             // Scenario 2: Manual install with old resources - automatic cleanup every time until clean
             else if (manualExists && (oldScriptsExist || oldAarsExist))
@@ -148,6 +151,32 @@ namespace AppHarbrSDK.Editor
             catch (System.Exception e)
             {
                 Debug.LogError($"[AppHarbr] Failed to cleanup old files: {e.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Notifies AppHarbrPostprocessor that migration is complete
+        /// Uses reflection to avoid hard dependency between scripts
+        /// </summary>
+        private static void NotifyMigrationComplete()
+        {
+            try
+            {
+                var postprocessorType = System.Type.GetType("AppHarbrPostprocessor");
+                if (postprocessorType != null)
+                {
+                    var method = postprocessorType.GetMethod("OnMigrationComplete",
+                        System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+
+                    if (method != null)
+                    {
+                        method.Invoke(null, null);
+                    }
+                }
+            }
+            catch
+            {
+                // Silently fail if postprocessor not found or method doesn't exist
             }
         }
     }

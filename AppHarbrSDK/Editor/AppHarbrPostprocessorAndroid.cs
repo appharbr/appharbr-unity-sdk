@@ -35,8 +35,11 @@ public class AppHarbrPostprocessor : IPreprocessBuildWithReport
     // LevelPlay UPM package name
     private const string LEVELPLAY_PACKAGE_NAME = "com.unity.services.levelplay";
 
-    // EditorPrefs key for migration tracking
+    // EditorPrefs key for migration tracking (shared with AppHarbrMigration.cs)
     private const string MIGRATION_FLAG_KEY = "AppHarbr.SDK.MigrationCompleted";
+
+    // Flag to track if migration is in progress
+    private static bool isWaitingForMigration = false;
 
     #endregion
 
@@ -52,6 +55,12 @@ public class AppHarbrPostprocessor : IPreprocessBuildWithReport
         if (report.summary.platform != BuildTarget.Android)
         {
             return;
+        }
+
+        // Wait for migration to complete if in progress
+        while (isWaitingForMigration)
+        {
+            System.Threading.Thread.Sleep(100);
         }
 
         PerformLevelPlayIntegration(forceRefresh: true);
@@ -79,12 +88,51 @@ public class AppHarbrPostprocessor : IPreprocessBuildWithReport
 
         if (isUpmAppHarbr && isManualAppHarbr && !migrationCompleted)
         {
-            // Wait for migration dialog to complete
-            EditorApplication.delayCall += () => PerformLevelPlayIntegration(forceRefresh: false);
+            // Migration in progress - wait for it to complete
+            isWaitingForMigration = true;
+            WaitForMigrationCompletion();
         }
         else
         {
+            // No migration needed, proceed with integration
             PerformLevelPlayIntegration(forceRefresh: false);
+        }
+    }
+
+    /// <summary>
+    /// Called by AppHarbrMigration when migration dialog completes
+    /// Public so it can be invoked via reflection
+    /// </summary>
+    public static void OnMigrationComplete()
+    {
+        isWaitingForMigration = false;
+        EditorApplication.delayCall += () => PerformLevelPlayIntegration(forceRefresh: false);
+    }
+
+    /// <summary>
+    /// Polls for migration completion before running integration (fallback if notification fails)
+    /// </summary>
+    private static void WaitForMigrationCompletion()
+    {
+        // Check if migration completed
+        bool migrationCompleted = EditorPrefs.GetBool(MIGRATION_FLAG_KEY, false);
+        bool manualStillExists = Directory.Exists("Assets/AppHarbrSDK");
+
+        if (migrationCompleted || !manualStillExists)
+        {
+            // Migration completed (either user chose to remove or keep)
+            isWaitingForMigration = false;
+            PerformLevelPlayIntegration(forceRefresh: false);
+        }
+        else if (!isWaitingForMigration)
+        {
+            // Migration completed via notification, don't keep polling
+            return;
+        }
+        else
+        {
+            // Still waiting, check again in 500ms
+            EditorApplication.delayCall += WaitForMigrationCompletion;
         }
     }
 
