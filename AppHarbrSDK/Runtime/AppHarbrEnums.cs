@@ -265,6 +265,6 @@ public enum AHAdAnalyzedResult : int
     NotAnalyzedUnsupportedAdNetworkVersion = 7,
     NotAnalyzedSdkNotInitialized = 8,
     NotAnalyzedInitializationInProgress = 9,
-    NotAnalyzedPolicyUnavailable = 10
+    NotAnalyzedPolicyUnavailable = 10,
     NoResultAnalyzed = 999
 }
