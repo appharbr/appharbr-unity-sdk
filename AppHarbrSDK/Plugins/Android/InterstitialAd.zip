@@ -16,13 +16,9 @@ import com.unity3d.player.UnityPlayer;
 public class InterstitialAd {
       Activity mActivity;
       LevelPlayInterstitialAd mInterstitialAd;
+      // AppHarbr ==========================================
       IUnityInterstitialAdListener interstitialAdListener;
-
-      public InterstitialAd(String adUnitId, IUnityInterstitialAdListener interstitialAdListener) {
-         this.mActivity = UnityPlayer.currentActivity;
-         this.mInterstitialAd = new LevelPlayInterstitialAd(adUnitId);
-         setupInterstitialListener(interstitialAdListener);
-      }
+      // AppHarbr ==========================================
 
       public InterstitialAd(String adUnitId, Config config, IUnityInterstitialAdListener interstitialAdListener) {
          this.mActivity = UnityPlayer.currentActivity;
@@ -31,6 +27,7 @@ public class InterstitialAd {
       }
 
       private void setupInterstitialListener(IUnityInterstitialAdListener interstitialAdListener) {
+          // AppHarbr ==========================================
           this.interstitialAdListener = interstitialAdListener;
 
           LevelPlayInterstitialAdListener ahWrapperCallback = null;
@@ -43,10 +40,11 @@ public class InterstitialAd {
               );
           }
 
-	  Log.i("AppHarbrUnityPackage", "AppHarbr Integrated Interstitial for " + this.mInterstitialAd.getAdUnitId() + "? " + (ahWrapperCallback != null));
+          Log.i("AppHarbrUnityPackage", "AppHarbr Integrated Interstitial for " + this.mInterstitialAd.getAdUnitId() + "? " + (ahWrapperCallback != null));
           this.mInterstitialAd.setListener(ahWrapperCallback != null
                   ? ahWrapperCallback
                   : mLevelPlayInterstitialAdListener);
+          // AppHarbr ==========================================
       }
 
       private final LevelPlayInterstitialAdListener mLevelPlayInterstitialAdListener = new LevelPlayInterstitialAdListener() {

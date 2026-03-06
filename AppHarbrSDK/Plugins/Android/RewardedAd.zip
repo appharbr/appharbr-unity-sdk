@@ -18,14 +18,9 @@ public class RewardedAd {
    Activity mActivity;
 
    LevelPlayRewardedAd mRewardedAd;
-   IUnityRewardedAdListener rewardedAdListener;
-
-   public RewardedAd(String adUnitId, IUnityRewardedAdListener rewardedAdListener) {
-      this.mActivity = UnityPlayer.currentActivity;
-
-      this.mRewardedAd = new LevelPlayRewardedAd(adUnitId);
-      setupRewardedListener(rewardedAdListener);
-   }
+    // AppHarbr ==========================================
+    IUnityRewardedAdListener rewardedAdListener;
+    // AppHarbr ==========================================
 
    public RewardedAd(String adUnitId, Config config, IUnityRewardedAdListener rewardedAdListener) {
       this.mActivity = UnityPlayer.currentActivity;
@@ -35,7 +30,8 @@ public class RewardedAd {
    }
 
    private void setupRewardedListener(IUnityRewardedAdListener rewardedAdListener) {
-      this.rewardedAdListener = rewardedAdListener;
+       // AppHarbr ==========================================
+       this.rewardedAdListener = rewardedAdListener;
 
       LevelPlayRewardedAdListener ahWrapperCallback = null;
       if (AHUnityMediators.isWatchingAdUnitId(AdFormat.REWARDED, mRewardedAd.getAdUnitId())) {
@@ -47,10 +43,11 @@ public class RewardedAd {
          );
       }
 
-      Log.i("AppHarbrUnityPackage", "AppHarbr Integrated Rewarded for " + this.mRewardedAd.getAdUnitId() + "? " + (ahWrapperCallback != null));
+       Log.i("AppHarbrUnityPackage", "AppHarbr Integrated Rewarded for " + this.mRewardedAd.getAdUnitId() + "? " + (ahWrapperCallback != null));
       this.mRewardedAd.setListener(ahWrapperCallback != null
               ? ahWrapperCallback
               : mLevelPlayRewardedAdListener );
+       // AppHarbr =========================================
    }
 
    private final LevelPlayRewardedAdListener mLevelPlayRewardedAdListener = new LevelPlayRewardedAdListener() {
@@ -130,6 +127,10 @@ public class RewardedAd {
 
    public String getAdId() {
       return this.mRewardedAd.getAdId();
+   }
+
+   public LevelPlayReward getReward(String placement) {
+      return this.mRewardedAd.getReward(placement);
    }
 
     public static class ConfigBuilder {
