@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <dependencies>
     <androidPackages>
-        <androidPackage spec="com.github.appharbr:appharbr-android-sdk:2.33.+">
+        <androidPackage spec="com.github.appharbr:appharbr-android-sdk:2.34.+">
             <repositories>
                 <repository>https://jitpack.io</repository>
             </repositories>
         </androidPackage>
-        <androidPackage spec="com.github.appharbr:android-unity-bridge:1.17.0">
+        <androidPackage spec="com.github.appharbr:android-unity-bridge:1.18.+">
             <repositories>
                 <repository>https://jitpack.io</repository>
             </repositories>
