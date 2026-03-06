@@ -13,7 +13,7 @@
         </androidPackage>
     </androidPackages>
     <iosPods>
-        <iosPod name="AppHarbrSDK" version="~>1.30" />
+        <iosPod name="AppHarbrSDK" version="~>1.31" />
         <iosPod name="AppHarbrSDKUnityPlugin" version="1.16.0.0" />
     </iosPods>
 </dependencies>
