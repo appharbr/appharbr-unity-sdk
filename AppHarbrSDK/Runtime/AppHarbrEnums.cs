@@ -16,7 +16,7 @@ public enum AHAdSdk : int
     Amazon = 40,
     Automattic = 70,
     BidMachine = 41,
-    BigoAds = 72,
+    BigoAds = 71,
     BeachFront = 73,
     BeeSwax = 74,
     Colossus = 75,
