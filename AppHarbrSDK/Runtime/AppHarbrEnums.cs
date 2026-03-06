@@ -87,6 +87,7 @@ public enum AHAdSdk : int
     Unrulyx = 62,
     Verizon = 32,
     Verve = 63,
+    ViberExchange = 94,
     Vpon = 33,
     Vrtcal = 86,
     Vungle = 34,
@@ -262,5 +263,8 @@ public enum AHAdAnalyzedResult : int
     NotAnalyzedHouseCampaign = 5,
     NotAnalyzedDueToTargetedAdNetworks = 6,
     NotAnalyzedUnsupportedAdNetworkVersion = 7,
+    NotAnalyzedSdkNotInitialized = 8,
+    NotAnalyzedInitializationInProgress = 9,
+    NotAnalyzedPolicyUnavailable = 10
     NoResultAnalyzed = 999
 }
