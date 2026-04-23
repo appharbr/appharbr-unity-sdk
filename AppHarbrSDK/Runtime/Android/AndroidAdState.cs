@@ -26,14 +26,21 @@ public abstract class AndroidAdState {
     private static AHAdStateResult GetAdState(string adFormat, string adUnitId){
         try
         {
-            if(appHarbrClass == null){
+            if(appHarbrClass == null)
+            {
                 Debug.Log("Cannot find AppHarbr class!");
                 return AHAdStateResult.Unknown;
             }
-            AndroidJavaObject state = appHarbrClass.CallStatic<AndroidJavaObject>(adFormat, adUnitId);
-            int enumOrdinal = state.Call<int>("ordinal");
-            AHAdStateResult adStateResult = (AHAdStateResult)Enum.ToObject(typeof(AHAdStateResult), enumOrdinal);
-            return adStateResult;
+
+            using ( AndroidJavaObject state = appHarbrClass.CallStatic<AndroidJavaObject>(adFormat, adUnitId) )
+            {
+                if (state != null)
+                {
+                    int enumOrdinal = state.Call<int>("ordinal");
+                    AHAdStateResult adStateResult = (AHAdStateResult)Enum.ToObject(typeof(AHAdStateResult), enumOrdinal);
+                    return adStateResult;
+                }
+            }
         }
         catch (Exception e)
         {

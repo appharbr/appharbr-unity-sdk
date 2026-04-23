@@ -14,6 +14,7 @@ public enum AHAdSdk : int
     Applovin = 9,
     Appodeal = 39,
     Amazon = 40,
+    Arity = 98,
     Automattic = 70,
     BidMachine = 41,
     BigoAds = 71,
