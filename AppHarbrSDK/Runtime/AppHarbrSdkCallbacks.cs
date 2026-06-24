@@ -90,6 +90,9 @@ public class AppHarbrSdkCallbacks : MonoBehaviour
             }
 
             var adUnitId = AppHarbrSdkUtils.GetStringFromDictionary(eventProps, "adUnitId", "");
+            var adNetworkIntValue = AppHarbrSdkUtils.GetIntFromDictionary(eventProps, "adNetwork", 999);
+            var adNetworkEnumValue = (AHAdSdk)Enum.ToObject(typeof(AHAdSdk), adNetworkIntValue);
+            var creativeId = AppHarbrSdkUtils.GetStringFromDictionary(eventProps, "creativeId", "");
             var adFormatIntValue = AppHarbrSdkUtils.GetIntFromDictionary(eventProps, "adFormat");
             var adFormatEnumValue = (AHAdFormat)Enum.ToObject(typeof(AHAdFormat), adFormatIntValue);
             var adBlockReasons = AppHarbrSdkUtils.GetListFromDictionary(eventProps, "reasons", null);
@@ -100,8 +103,8 @@ public class AppHarbrSdkCallbacks : MonoBehaviour
 
             var ahIncidentData = new AHIncidentData(
                 unitId: adUnitId,
-                adNetwork: AHAdSdk.None,
-                creativeId: "",
+                adNetwork: adNetworkEnumValue,
+                creativeId: creativeId,
                 adFormat: adFormatEnumValue,
                 shouldLoadNewAd: shouldLoadNewAd,
                 blockReasons: blockReasonsList,
@@ -120,7 +123,7 @@ public class AppHarbrSdkCallbacks : MonoBehaviour
             }
 
             var adUnitId = AppHarbrSdkUtils.GetStringFromDictionary(eventProps, "adUnitId", "");
-            var adNetworkIntValue = AppHarbrSdkUtils.GetIntFromDictionary(eventProps, "adNetwork");
+            var adNetworkIntValue = AppHarbrSdkUtils.GetIntFromDictionary(eventProps, "adNetwork", 999);
             var adNetworkEnumValue = (AHAdSdk)Enum.ToObject(typeof(AHAdSdk), adNetworkIntValue);
             var creativeId = AppHarbrSdkUtils.GetStringFromDictionary(eventProps, "creativeId", "");
             var adFormatIntValue = AppHarbrSdkUtils.GetIntFromDictionary(eventProps, "adFormat");
@@ -156,8 +159,9 @@ public class AppHarbrSdkCallbacks : MonoBehaviour
             }
 
             var adUnitId = AppHarbrSdkUtils.GetStringFromDictionary(eventProps, "adUnitId", "");
-            var adNetworkIntValue = AppHarbrSdkUtils.GetIntFromDictionary(eventProps, "adNetwork");
+            var adNetworkIntValue = AppHarbrSdkUtils.GetIntFromDictionary(eventProps, "adNetwork", 999);
             var adNetworkEnumValue = (AHAdSdk)Enum.ToObject(typeof(AHAdSdk), adNetworkIntValue);
+            var creativeId = AppHarbrSdkUtils.GetStringFromDictionary(eventProps, "creativeId", "");
             var adFormatIntValue = AppHarbrSdkUtils.GetIntFromDictionary(eventProps, "adFormat");
             var adFormatEnumValue = (AHAdFormat)Enum.ToObject(typeof(AHAdFormat), adFormatIntValue);
             var resultIntValue = AppHarbrSdkUtils.GetIntFromDictionary(eventProps, "analyzedResult");
@@ -166,7 +170,7 @@ public class AppHarbrSdkCallbacks : MonoBehaviour
             var ahIncidentData = new AHIncidentData(
                 unitId: adUnitId,
                 adNetwork: adNetworkEnumValue,
-                creativeId: "",
+                creativeId: creativeId,
                 adFormat: adFormatEnumValue,
                 shouldLoadNewAd: false,
                 blockReasons: null,
