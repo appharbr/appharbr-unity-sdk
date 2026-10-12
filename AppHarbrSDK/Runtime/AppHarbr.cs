@@ -16,7 +16,7 @@ public class AppHarbr :
 #endif
 {
     public static AHSdkConfiguration SdkConfiguration = null;
-    private const string version = "1.26.0";
+    private const string version = "1.27.0";
 
     /// <summary>
     /// Gets the current AppHarbr plugin version.
